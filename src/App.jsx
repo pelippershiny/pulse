@@ -102,7 +102,10 @@ function App() {
       // Esto dibuja el borde DENTRO del div redondeado, evitando que se salga o pixelice.
       boxShadow: 'inset 0 0 0 1px rgba(255, 255, 255, 0.1), 0 0 0 1px transparent', 
       
-      borderRadius: '16px', 
+      // FIX: Eliminamos borderRadius para evitar artefactos en las esquinas
+      // Al desactivar la composición en Linux, la transparencia en las esquinas no es perfecta.
+      // Un diseño cuadrado es más limpio y evita el "borde fantasma".
+      borderRadius: '0px', 
       overflow: 'hidden', 
       fontFamily: 'Inter, system-ui, sans-serif',
       boxSizing: 'border-box',
