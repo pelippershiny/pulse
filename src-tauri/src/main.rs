@@ -1,6 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use enigo::{Enigo, Key, KeyboardControllable};
+use enigo::{Enigo, Key, Keyboard, Settings};
 use std::sync::{
     atomic::{AtomicBool, Ordering},
     Arc,
@@ -22,14 +22,13 @@ fn toggle_pulse(state: State<PulseState>, running: bool, interval_secs: u64) {
         let is_running = state.is_running.clone();
 
         thread::spawn(move || {
-            let mut enigo = Enigo::new();
+            let mut enigo = Enigo::new(&Settings::default()).unwrap();
 
             while is_running.load(Ordering::Relaxed) {
-                // CAMBIO: Usamos 'Shift' porque 'ScrollLock' no existe en esta versión de Enigo.
-                // Pulsar Shift es invisible y mantiene el PC despierto igual.
-                let _ = enigo.key_click(Key::Shift);
+                // Usamos 'Shift' porque es invisible y mantiene el PC despierto
+                let _ = enigo.key(Key::Shift, enigo::Direction::Press);
                 thread::sleep(Duration::from_millis(50));
-                let _ = enigo.key_click(Key::Shift);
+                let _ = enigo.key(Key::Shift, enigo::Direction::Release);
 
                 println!("Pulse: Heartbeat sent (Shift key).");
 
