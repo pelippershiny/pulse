@@ -17,12 +17,28 @@ body {
   background-color: transparent; 
   width: 100vw;
   height: 100vh;
+  /* Fallback: Aseguramos texto blanco por defecto por si falla Tailwind */
+  color: white;
 }
 
 #root {
   width: 100%;
   height: 100%;
 }
+
+/* --- FALLBACKS DE SEGURIDAD CRÍTICOS --- 
+   Si Tailwind falla al compilar, esto forzará que la ventana sea visible.
+   Aplica estilos base al primer div dentro del root (tu App).
+*/
+#root > div:first-child {
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(16px);
+  display: flex;
+  flex-direction: column;
+}
+/* --------------------------------------- */
 
 /* Eliminamos las flechas del input number */
 input[type=number]::-webkit-inner-spin-button, 
