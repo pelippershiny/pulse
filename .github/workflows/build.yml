@@ -6,6 +6,9 @@ on:
       - "v*"
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     strategy:
@@ -22,9 +25,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: "npm"
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
 
       - name: Install Linux dependencies
         if: matrix.platform == 'ubuntu-22.04'
@@ -91,14 +100,12 @@ jobs:
           name: pulse-windows
           path: artifacts/windows
 
+      - name: Flatten artifacts
+        run: |
+          mkdir assets
+          find artifacts -type f \( -name "*.AppImage" -o -name "*.deb" -o -name "*.app" -o -name "*.dmg" -o -name "*.exe" -o -name "*.msi" -o -name "pulse" \) -exec cp {} assets/ \;
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          files: |
-            artifacts/linux/pulse
-            artifacts/linux/*.AppImage
-            artifacts/linux/*.deb
-            artifacts/macos/*.app
-            artifacts/macos/*.dmg
-            artifacts/windows/pulse.exe
-            artifacts/windows/*.msi
+          files: assets/*
