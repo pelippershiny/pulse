@@ -45,6 +45,14 @@ fn toggle_pulse(state: State<PulseState>, running: bool, interval_secs: u64) {
 }
 
 fn main() {
+    // FIX: Disable WebKitGTK hardware compositing to prevent black screen on Linux
+    // This prevents backdrop-filter from working, but rendering is more important.
+    // Alternative glass effect implemented with visual depth cues instead.
+    // SAFETY: This is safe because it's called at the very beginning of main, before any threads are spawned.
+    unsafe {
+        std::env::set_var("WEBKIT_DISABLE_COMPOSITING_MODE", "1");
+    }
+
     tauri::Builder::default()
         // Inicializamos el plugin opener para que no fallen los permisos
         .plugin(tauri_plugin_opener::init())

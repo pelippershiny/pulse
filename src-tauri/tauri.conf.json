@@ -14,10 +14,10 @@
         "title": "Pulse",
         "width": 300,
         "height": 400,
-        "resizable": true,
+        "resizable": false,
         "fullscreen": false,
-        "decorations": true,
-        "transparent": false,
+        "decorations": false,
+        "transparent": true,
         "center": true
       }
     ],

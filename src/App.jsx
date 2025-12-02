@@ -16,21 +16,13 @@ if (typeof window !== 'undefined') {
 function App() {
   const [isActive, setIsActive] = useState(false);
   const [intervalSecs, setIntervalSecs] = useState(30);
-  const [isReady, setIsReady] = useState(false); // Nuevo estado para controlar la carga
 
   useEffect(() => {
     // 1. Limpieza de estilos globales
-    // CAMBIO: Usamos un azul oscuro para confirmar visualmente que el CSS se aplica
-    document.body.style.backgroundColor = "#001f3f"; 
+    // CAMBIO: Fondo transparente para permitir el efecto glass en la ventana
+    document.body.style.backgroundColor = "transparent"; 
     document.body.style.margin = "0";
     document.body.style.overflow = "hidden";
-
-    // 2. Retraso artificial para asegurar que la ventana de Linux esté lista
-    const timer = setTimeout(() => {
-        setIsReady(true);
-    }, 100);
-
-    return () => clearTimeout(timer);
   }, []);
 
   const handleWindowAction = async (action) => {
@@ -72,13 +64,17 @@ function App() {
   const styles = {
     container: {
       width: '100vw', height: '100vh', 
-      background: '#0a0a0a', // Volvemos al negro para el contenedor interno
+      background: 'rgba(10, 10, 10, 0.75)', // Fondo semi-transparente
+      backdropFilter: 'blur(20px)', // Intento de blur (no funciona con compositing deshabilitado)
+      WebkitBackdropFilter: 'blur(20px)',
       color: 'white',
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      border: '1px solid #333', borderRadius: '8px', overflow: 'hidden', fontFamily: 'sans-serif',
+      border: '1px solid rgba(255, 255, 255, 0.15)', 
+      borderRadius: '12px', 
+      overflow: 'hidden', 
+      fontFamily: 'sans-serif',
       boxSizing: 'border-box',
-      opacity: isReady ? 1 : 0, // Efecto fade-in suave
-      transition: 'opacity 0.5s ease'
+      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
     },
     titleBar: {
       width: '100%', height: '32px', background: 'rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', paddingRight: '10px'
@@ -101,8 +97,20 @@ function App() {
       outline: 'none'
     },
     input: {
-      background: 'transparent', border: 'none', borderBottom: '1px solid #444', color: '#ccc',
-      textAlign: 'center', fontSize: '18px', width: '50px', marginTop: '5px', outline: 'none'
+      background: 'rgba(0, 0, 0, 0.6)', 
+      border: 'none', 
+      borderBottom: '2px solid rgba(255, 255, 255, 0.2)', 
+      color: '#eee',
+      textAlign: 'center', 
+      fontSize: '18px', 
+      width: '70px', 
+      marginTop: '5px', 
+      outline: 'none',
+      padding: '8px', 
+      borderRadius: '6px',
+      colorScheme: 'dark', // Force dark mode for number spinners
+      WebkitAppearance: 'textfield', // Remove default spinner styling
+      MozAppearance: 'textfield',
     },
     warning: {
       position: 'absolute', bottom: 10, fontSize: '10px', color: '#555', textAlign: 'center', width: '100%'
@@ -113,9 +121,9 @@ function App() {
     <div style={styles.container}>
       
       {/* Barra Título */}
-      <div data-tauri-drag-region style={styles.titleBar} onMouseDown={() => handleWindowAction('drag')}>
-        <button style={styles.btnWindow} onClick={() => handleWindowAction('minimize')}>_</button>
-        <button style={{...styles.btnWindow, color:'#f55'}} onClick={() => handleWindowAction('close')}>✕</button>
+      <div data-tauri-drag-region style={styles.titleBar}>
+        <button style={styles.btnWindow} onClick={(e) => { e.stopPropagation(); handleWindowAction('minimize'); }}>_</button>
+        <button style={{...styles.btnWindow, color:'#f55'}} onClick={(e) => { e.stopPropagation(); handleWindowAction('close'); }}>✕</button>
       </div>
 
       {/* Contenido */}
@@ -140,7 +148,7 @@ function App() {
         </div>
         
         <div style={styles.warning}>
-           Pulse v1.0 {isReady ? '(Ready)' : '(Loading...)'}
+           Pulse v1.0
         </div>
 
       </div>
