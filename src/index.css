@@ -4,20 +4,17 @@
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
-  /* Prevenimos el scroll y selección en toda la app */
   user-select: none;
   overflow: hidden;
 }
 
-body {
+/* FIX: Fondo oscuro por defecto para evitar el pantallazo blanco */
+html, body {
   margin: 0;
   padding: 0;
-  /* IMPORTANTE: Fondo transparente para que funcione el Glassmorphism */
-  background-color: transparent; 
+  background-color: #0f0f0f; /* Color de seguridad */
   width: 100vw;
   height: 100vh;
-  /* Fallback: Aseguramos texto blanco por defecto por si falla Tailwind */
   color: white;
 }
 
@@ -26,28 +23,7 @@ body {
   height: 100%;
 }
 
-/* --- FALLBACKS DE SEGURIDAD CRÍTICOS --- 
-   Si Tailwind falla al compilar, esto forzará que la ventana sea visible.
-   Aplica estilos base al primer div dentro del root (tu App).
-*/
-#root > div:first-child {
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(16px);
-  display: flex;
-  flex-direction: column;
-}
-/* --------------------------------------- */
-
-/* Eliminamos las flechas del input number */
-input[type=number]::-webkit-inner-spin-button, 
-input[type=number]::-webkit-outer-spin-button { 
-  -webkit-appearance: none; 
-  margin: 0; 
-}
-
-/* Animación de Respiración Lenta (Breathing) */
+/* Animación de Respiración */
 @keyframes pulse-slow {
   0%, 100% {
     transform: scale(1.05);
