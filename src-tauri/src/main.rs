@@ -1,6 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use enigo::{Enigo, Key, Keyboard, Settings};
+use enigo::{Coordinate, Enigo, Mouse, Settings}; // Quitamos imports no usados
 use std::sync::{
     atomic::{AtomicBool, Ordering},
     Arc,
@@ -9,7 +9,6 @@ use std::thread;
 use std::time::Duration;
 use tauri::State;
 
-// Estructura para manejar el estado global
 struct PulseState {
     is_running: Arc<AtomicBool>,
 }
@@ -22,16 +21,21 @@ fn toggle_pulse(state: State<PulseState>, running: bool, interval_secs: u64) {
         let is_running = state.is_running.clone();
 
         thread::spawn(move || {
-            let mut enigo = Enigo::new(&Settings::default()).unwrap();
+            // Inicialización de Enigo
+            let mut enigo = match Enigo::new(&Settings::default()) {
+                Ok(e) => e,
+                Err(_) => return, // Si falla inicializar, salimos del hilo
+            };
 
             while is_running.load(Ordering::Relaxed) {
-                // Usamos 'Shift' porque es invisible y mantiene el PC despierto
-                let _ = enigo.key(Key::Shift, enigo::Direction::Press);
-                thread::sleep(Duration::from_millis(50));
-                let _ = enigo.key(Key::Shift, enigo::Direction::Release);
+                // CORRECCIÓN: En Enigo 0.2 se usa Coordinate::Rel (Relative)
+                // Movemos 1 pixel y volvemos. El .ok() evita pánicos si falla.
+                enigo.move_mouse(1, 0, Coordinate::Rel).ok();
+                enigo.move_mouse(-1, 0, Coordinate::Rel).ok();
 
-                println!("Pulse: Heartbeat sent (Shift key).");
+                println!("Pulse: Micro-movement sent (Mouse).");
 
+                // Esperamos el intervalo
                 for _ in 0..interval_secs {
                     if !is_running.load(Ordering::Relaxed) {
                         break;
@@ -44,16 +48,12 @@ fn toggle_pulse(state: State<PulseState>, running: bool, interval_secs: u64) {
 }
 
 fn main() {
-    // FIX: Disable WebKitGTK hardware compositing to prevent black screen on Linux
-    // This prevents backdrop-filter from working, but rendering is more important.
-    // Alternative glass effect implemented with visual depth cues instead.
-    // SAFETY: This is safe because it's called at the very beginning of main, before any threads are spawned.
+    // FIX LINUX: Desactivar composición hardware para evitar pantalla negra en WebKitGTK
     unsafe {
         std::env::set_var("WEBKIT_DISABLE_COMPOSITING_MODE", "1");
     }
 
     tauri::Builder::default()
-        // Inicializamos el plugin opener para que no fallen los permisos
         .plugin(tauri_plugin_opener::init())
         .manage(PulseState {
             is_running: Arc::new(AtomicBool::new(false)),
