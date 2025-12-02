@@ -25,7 +25,7 @@ A minimalist keep-awake desktop utility built with Tauri and React. Pulse preven
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/pulse.git
+git clone https://github.com/pelippershiny/pulse.git
 cd pulse
 ```
 
