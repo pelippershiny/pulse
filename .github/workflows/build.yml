@@ -47,6 +47,8 @@ jobs:
       - name: Build
         run: npm run tauri build
 
+      # --- SUBIDA DE ARTEFACTOS ---
+
       - name: Upload Linux artifacts
         if: matrix.platform == 'ubuntu-22.04'
         uses: actions/upload-artifact@v4
@@ -63,8 +65,8 @@ jobs:
         with:
           name: pulse-macos
           path: |
-            src-tauri/target/release/bundle/macos/*.app
             src-tauri/target/release/bundle/dmg/*.dmg
+            # No subimos .app a la release porque es una carpeta, el DMG es el estándar de distribución
 
       - name: Upload Windows artifacts
         if: matrix.platform == 'windows-latest'
@@ -82,6 +84,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Descargar todo
       - name: Download Linux artifacts
         uses: actions/download-artifact@v4
         with:
@@ -100,12 +103,54 @@ jobs:
           name: pulse-windows
           path: artifacts/windows
 
-      - name: Flatten artifacts
+      # --- AQUÍ ESTÁ LA MAGIA: RENOMBRAR Y ORGANIZAR ---
+      - name: Prepare Assets for Release
         run: |
           mkdir assets
-          find artifacts -type f \( -name "*.AppImage" -o -name "*.deb" -o -name "*.app" -o -name "*.dmg" -o -name "*.exe" -o -name "*.msi" -o -name "pulse" \) -exec cp {} assets/ \;
+
+          # 1. WINDOWS
+          # Buscamos el ejecutable raw y lo renombramos a Portable
+          find artifacts/windows -name "pulse.exe" -exec cp {} assets/Pulse_Windows_Portable.exe \;
+          # El instalador MSI se copia tal cual
+          find artifacts/windows -name "*.msi" -exec cp {} assets/ \;
+
+          # 2. LINUX
+          # El binario raw 'pulse' lo renombramos
+          find artifacts/linux -type f -name "pulse" -exec cp {} assets/Pulse_Linux_Portable_x64 \;
+          # AppImage y Deb se copian tal cual
+          find artifacts/linux -name "*.AppImage" -exec cp {} assets/ \;
+          find artifacts/linux -name "*.deb" -exec cp {} assets/ \;
+
+          # 3. MACOS
+          # Solo copiamos el DMG
+          find artifacts/macos -name "*.dmg" -exec cp {} assets/ \;
+
+          ls -R assets/
+
+      # --- GENERAR DESCRIPCIÓN DE LA RELEASE ---
+      - name: Generate Release Body
+        run: |
+          touch release_body.md
+          echo "## 🚀 Pulse ${{ github.ref_name }}" >> release_body.md
+          echo "" >> release_body.md
+          echo "Mantén tu equipo despierto con estilo." >> release_body.md
+          echo "" >> release_body.md
+          echo "### 📥 Descargas y Detalles" >> release_body.md
+          echo "" >> release_body.md
+          echo "| Sistema | Archivo | Descripción |" >> release_body.md
+          echo "| :--- | :--- | :--- |" >> release_body.md
+          echo "| **Windows** | \`.msi\` | **Instalador** (Recomendado). Crea accesos directos. |" >> release_body.md
+          echo "| | \`Pulse_Windows_Portable.exe\` | **Portable**. Ejecutar y listo, sin instalación. |" >> release_body.md
+          echo "| **macOS** | \`.dmg\` | Arrastrar a Aplicaciones para instalar. |" >> release_body.md
+          echo "| **Linux** | \`.AppImage\` | **Universal**. Dar permisos de ejecución y abrir. |" >> release_body.md
+          echo "| | \`.deb\` | Para Debian/Ubuntu/Mint/Pop!_OS. |" >> release_body.md
+          echo "| | \`Pulse_Linux_Portable_x64\` | Binario crudo (Advanced). |" >> release_body.md
+          echo "" >> release_body.md
+          echo "---" >> release_body.md
+          echo "*SHA256 Checksums disponibles en los logs de compilación.*" >> release_body.md
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: assets/*
+          body_path: release_body.md
